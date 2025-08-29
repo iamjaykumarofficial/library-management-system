@@ -46,21 +46,21 @@ function OwnerDashboard() {
       {error && <Alert type="danger" message={error} />}
       <div className="row mt-4">
         <div className="col-md-3">
-          <Card title="Revenue" value={`₹${stats.revenue ? stats.revenue.toFixed(2) : '0.00'}`} label="This Month" />
+          <Card title="Revenue" value={`₹${stats.revenue.toFixed(2)}`} label="This Month" />
         </div>
         <div className="col-md-3">
-          <Card title="Active Members" value={stats.activeMembers || 0} label="Total Members" />
+          <Card title="Active Members" value={stats.activeMembers} label="Total Members" />
         </div>
         <div className="col-md-3">
-          <Card title="Books in Circulation" value={stats.booksInCirculation || 0} label="Currently Borrowed" />
+          <Card title="Books in Circulation" value={stats.booksInCirculation} label="Currently Borrowed" />
         </div>
         <div className="col-md-3">
-          <Card title="Outstanding Fines" value={`₹${stats.outstandingFines ? stats.outstandingFines.toFixed(2) : '0.00'}`} label="Total Due" />
+          <Card title="Outstanding Fines" value={`₹${stats.outstandingFines.toFixed(2)}`} label="Total Due" />
         </div>
       </div>
       <div className="mt-4">
         <h3>Quick Actions</h3>
-        <div className="d-flex gap-3 flex-wrap">
+        <div className="d-flex flex-wrap gap-3">
           <Link to="/add-book" className="btn btn-outline-dark">Add Book</Link>
           <Link to="/financial-reports" className="btn btn-outline-dark">Financial Reports</Link>
           <Link to="/asset-reports" className="btn btn-outline-dark">Asset Reports</Link>

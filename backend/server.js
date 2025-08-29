@@ -30,7 +30,7 @@ const authenticateToken = (req, res, next) => {
 // Register
 app.post('/api/register', async (req, res) => {
   const { fullName, email, phone, password, confirmPassword, role } = req.body
-  if (!fullName || !email || !phone || !password || !confirmPassword || !role) {
+  if (!fullName || !email || !password || !confirmPassword || !role) {
     return res.status(400).json({ error: 'All fields are required' })
   }
   if (password !== confirmPassword) {
@@ -46,7 +46,7 @@ app.post('/api/register', async (req, res) => {
       'INSERT INTO users (full_name, email, phone, password, role, membership_expiry) VALUES (?, ?, ?, ?, ?, ?)',
       [fullName, email, phone, hashedPassword, role, role === 'member' ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) : null]
     )
-    res.status(201).json({ message: 'User registered successfully', role })
+    res.status(201).json({ message: 'User registered successfully' })
   } catch (err) {
     console.error('Register error:', err)
     res.status(500).json({ error: 'Registration failed' })
@@ -74,53 +74,6 @@ app.post('/api/login', async (req, res) => {
   } catch (err) {
     console.error('Login error:', err)
     res.status(500).json({ error: 'Login failed' })
-  }
-})
-
-// Forgot Password (Placeholder)
-app.post('/api/forgot-password', async (req, res) => {
-  const { email } = req.body
-  if (!email) {
-    return res.status(400).json({ error: 'Email is required' })
-  }
-  try {
-    const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email])
-    if (users.length === 0) {
-      return res.status(404).json({ error: 'User not found' })
-    }
-    // TODO: Implement email sending logic here
-    res.json({ message: 'Reset instructions sent to your email' })
-  } catch (err) {
-    console.error('Forgot password error:', err)
-    res.status(500).json({ error: 'Failed to send reset instructions' })
-  }
-})
-
-// Change Password
-app.put('/api/change-password', authenticateToken, async (req, res) => {
-  const { currentPassword, newPassword, confirmPassword } = req.body
-  if (!currentPassword || !newPassword || !confirmPassword) {
-    return res.status(400).json({ error: 'All fields are required' })
-  }
-  if (newPassword !== confirmPassword) {
-    return res.status(400).json({ error: 'New passwords do not match' })
-  }
-  try {
-    const [users] = await pool.query('SELECT * FROM users WHERE id = ?', [req.user.id])
-    if (users.length === 0) {
-      return res.status(404).json({ error: 'User not found' })
-    }
-    const user = users[0]
-    const isMatch = await bcrypt.compare(currentPassword, user.password)
-    if (!isMatch) {
-      return res.status(400).json({ error: 'Current password is incorrect' })
-    }
-    const hashedPassword = await bcrypt.hash(newPassword, 10)
-    await pool.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, req.user.id])
-    res.json({ message: 'Password changed successfully' })
-  } catch (err) {
-    console.error('Change password error:', err)
-    res.status(500).json({ error: 'Failed to change password' })
   }
 })
 
@@ -159,13 +112,59 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
   }
 })
 
+// Change Password
+app.put('/api/change-password', authenticateToken, async (req, res) => {
+  const { currentPassword, newPassword, confirmPassword } = req.body
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    return res.status(400).json({ error: 'All fields are required' })
+  }
+  if (newPassword !== confirmPassword) {
+    return res.status(400).json({ error: 'New passwords do not match' })
+  }
+  try {
+    const [users] = await pool.query('SELECT password FROM users WHERE id = ?', [req.user.id])
+    if (users.length === 0) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+    const isMatch = await bcrypt.compare(currentPassword, users[0].password)
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Current password is incorrect' })
+    }
+    const hashedPassword = await bcrypt.hash(newPassword, 10)
+    await pool.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, req.user.id])
+    res.json({ message: 'Password changed successfully' })
+  } catch (err) {
+    console.error('Change password error:', err)
+    res.status(500).json({ error: 'Failed to change password' })
+  }
+})
+
+// Forgot Password (Placeholder - requires email service setup)
+app.post('/api/forgot-password', async (req, res) => {
+  const { email } = req.body
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' })
+  }
+  try {
+    const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email])
+    if (users.length === 0) {
+      return res.status(400).json({ error: 'Email not found' })
+    }
+    // Implement email service (e.g., Nodemailer) to send reset link
+    res.json({ message: 'Reset instructions sent to your email' })
+  } catch (err) {
+    console.error('Forgot password error:', err)
+    res.status(500).json({ error: 'Failed to send reset instructions' })
+  }
+})
+
 // Add Book
 app.post('/api/books', authenticateToken, async (req, res) => {
   if (req.user.role !== 'owner') {
     return res.status(403).json({ error: 'Access denied' })
   }
-  const { book_id, title, author, genre, isbn, publication_year, total_copies } = req.body
-  if (!book_id || !title || !author || !genre || !isbn || !publication_year || !total_copies) {
+  const { book_id, title, author, subject, isbn, publication_year, total_copies } = req.body
+  if (!book_id || !title || !author || !subject || !isbn || !publication_year || !total_copies) {
     return res.status(400).json({ error: 'All fields are required' })
   }
   try {
@@ -174,8 +173,8 @@ app.post('/api/books', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Book ID or ISBN already exists' })
     }
     await pool.query(
-      'INSERT INTO books (book_id, title, author, genre, isbn, publication_year, total_copies, available_copies) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [book_id, title, author, genre, isbn, publication_year, total_copies, total_copies]
+      'INSERT INTO books (book_id, title, author, subject, isbn, publication_year, total_copies, available_copies) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [book_id, title, author, subject, isbn, publication_year, total_copies, total_copies]
     )
     res.status(201).json({ message: 'Book added successfully' })
   } catch (err) {
@@ -192,12 +191,12 @@ app.get('/api/books/search', async (req, res) => {
   }
   try {
     const [books] = await pool.query(
-      'SELECT book_id, title, author, genre, available_copies FROM books WHERE title LIKE ? OR author LIKE ? OR isbn LIKE ?',
+      'SELECT book_id, title, author, subject, isbn, publication_year, available_copies FROM books WHERE title LIKE ? OR author LIKE ? OR isbn LIKE ?',
       [`%${query}%`, `%${query}%`, `%${query}%`]
     )
     res.json(books)
   } catch (err) {
-    console.error('Book search error:', err)
+    console.error('Search error:', err)
     res.status(500).json({ error: 'Failed to search books' })
   }
 })
@@ -207,7 +206,7 @@ app.get('/api/books/:id', async (req, res) => {
   const { id } = req.params
   try {
     const [books] = await pool.query(
-      'SELECT book_id, title, author, genre, isbn, publication_year, total_copies, available_copies FROM books WHERE book_id = ?',
+      'SELECT book_id, title, author, subject, isbn, publication_year, available_copies FROM books WHERE book_id = ?',
       [id]
     )
     if (books.length === 0) {
@@ -305,88 +304,6 @@ app.post('/api/pay-fine/:fineId', authenticateToken, async (req, res) => {
   }
 })
 
-// Outstanding Fines
-app.get('/api/outstanding-fines', authenticateToken, async (req, res) => {
-  if (req.user.role !== 'member') {
-    return res.status(403).json({ error: 'Access denied' })
-  }
-  try {
-    const [fines] = await pool.query(
-      'SELECT b.id, b.book_id, b.title, b.due_date, b.fine AS amount ' +
-      'FROM borrowings b WHERE b.user_id = ? AND b.fine > 0',
-      [req.user.id]
-    )
-    res.json(fines)
-  } catch (err) {
-    console.error('Outstanding fines error:', err)
-    res.status(500).json({ error: 'Failed to load fines' })
-  }
-})
-
-// Borrowed Books
-app.get('/api/borrowed-books', authenticateToken, async (req, res) => {
-  if (req.user.role !== 'member') {
-    return res.status(403).json({ error: 'Access denied' })
-  }
-  try {
-    const [books] = await pool.query(
-      'SELECT b.id AS borrowing_id, b.book_id, bk.title, b.borrow_date, b.due_date ' +
-      'FROM borrowings b JOIN books bk ON b.book_id = bk.book_id ' +
-      'WHERE b.user_id = ? AND b.return_date IS NULL',
-      [req.user.id]
-    )
-    res.json(books)
-  } catch (err) {
-    console.error('Borrowed books error:', err)
-    res.status(500).json({ error: 'Failed to load borrowed books' })
-  }
-})
-
-// Borrowing History
-app.get('/api/borrowing-history', authenticateToken, async (req, res) => {
-  if (req.user.role !== 'member') {
-    return res.status(403).json({ error: 'Access denied' })
-  }
-  try {
-    const [history] = await pool.query(
-      'SELECT b.book_id, bk.title, b.borrow_date, b.return_date, b.fine AS fine_amount ' +
-      'FROM borrowings b JOIN books bk ON b.book_id = bk.book_id ' +
-      'WHERE b.user_id = ?',
-      [req.user.id]
-    )
-    res.json(history)
-  } catch (err) {
-    console.error('Borrowing history error:', err)
-    res.status(500).json({ error: 'Failed to load borrowing history' })
-  }
-})
-
-// Book-Wise Copies
-app.get('/api/book-wise-copies', async (req, res) => {
-  try {
-    const [books] = await pool.query(
-      'SELECT book_id, title, total_copies, available_copies FROM books'
-    )
-    res.json(books)
-  } catch (err) {
-    console.error('Book-wise copies error:', err)
-    res.status(500).json({ error: 'Failed to load book copies' })
-  }
-})
-
-// Available Copies
-app.get('/api/available-copies', async (req, res) => {
-  try {
-    const [books] = await pool.query(
-      'SELECT book_id, title, author, total_copies, available_copies FROM books WHERE available_copies > 0'
-    )
-    res.json(books)
-  } catch (err) {
-    console.error('Available copies error:', err)
-    res.status(500).json({ error: 'Failed to load available copies' })
-  }
-})
-
 // Asset Reports
 app.get('/api/asset-reports', authenticateToken, async (req, res) => {
   if (req.user.role !== 'owner') {
@@ -425,23 +342,33 @@ app.get('/api/financial-reports', authenticateToken, async (req, res) => {
   }
 })
 
-// Collection Reports
-app.get('/api/collection-reports', authenticateToken, async (req, res) => {
+// Owner Dashboard
+app.get('/api/owner-dashboard', authenticateToken, async (req, res) => {
   if (req.user.role !== 'owner') {
     return res.status(403).json({ error: 'Access denied' })
   }
   try {
-    const [rows] = await pool.query(
-      'SELECT genre, ' +
-      'COUNT(*) AS total, ' +
-      'SUM(available_copies) AS available, ' +
-      'SUM(total_copies - available_copies) AS borrowed ' +
-      'FROM books GROUP BY genre'
+    const [revenue] = await pool.query(
+      'SELECT SUM(amount) AS revenue FROM payments WHERE MONTH(payment_date) = MONTH(CURRENT_DATE()) AND YEAR(payment_date) = YEAR(CURRENT_DATE())'
     )
-    res.json(rows)
+    const [activeMembers] = await pool.query(
+      'SELECT COUNT(*) AS activeMembers FROM users WHERE role = "member" AND membership_expiry >= CURRENT_DATE()'
+    )
+    const [booksInCirculation] = await pool.query(
+      'SELECT COUNT(*) AS booksInCirculation FROM borrowings WHERE return_date IS NULL'
+    )
+    const [outstandingFines] = await pool.query(
+      'SELECT SUM(fine) AS outstandingFines FROM borrowings WHERE fine > 0'
+    )
+    res.json({
+      revenue: revenue[0].revenue || 0,
+      activeMembers: activeMembers[0].activeMembers,
+      booksInCirculation: booksInCirculation[0].booksInCirculation,
+      outstandingFines: outstandingFines[0].outstandingFines || 0
+    })
   } catch (err) {
-    console.error('Collection reports error:', err)
-    res.status(500).json({ error: 'Failed to load collection reports' })
+    console.error('Owner dashboard error:', err)
+    res.status(500).json({ error: 'Failed to load dashboard data' })
   }
 })
 
@@ -453,11 +380,9 @@ app.get('/api/user-statistics', authenticateToken, async (req, res) => {
   try {
     const [stats] = await pool.query(
       'SELECT ' +
-      '"Total Members" AS metric, COUNT(*) AS value FROM users WHERE role = "member" ' +
-      'UNION ' +
-      'SELECT "Active Members" AS metric, COUNT(*) AS value FROM users WHERE role = "member" AND membership_expiry >= CURDATE() ' +
-      'UNION ' +
-      'SELECT "Expired Memberships" AS metric, COUNT(*) AS value FROM users WHERE role = "member" AND membership_expiry < CURDATE()'
+      '"Total Members" AS metric, COUNT(*) AS value FROM users WHERE role = "member" UNION ' +
+      'SELECT "Active Members" AS metric, COUNT(*) AS value FROM users WHERE role = "member" AND membership_expiry >= CURRENT_DATE() UNION ' +
+      'SELECT "Expired Memberships" AS metric, COUNT(*) AS value FROM users WHERE role = "member" AND membership_expiry < CURRENT_DATE()'
     )
     res.json(stats)
   } catch (err) {
@@ -473,11 +398,11 @@ app.get('/api/subject-wise-inventory', authenticateToken, async (req, res) => {
   }
   try {
     const [rows] = await pool.query(
-      'SELECT genre AS subject, ' +
+      'SELECT subject, ' +
       'COUNT(*) AS total, ' +
       'SUM(available_copies) AS available, ' +
       'SUM(total_copies - available_copies) AS borrowed ' +
-      'FROM books GROUP BY genre'
+      'FROM books GROUP BY subject'
     )
     res.json(rows)
   } catch (err) {
@@ -486,23 +411,109 @@ app.get('/api/subject-wise-inventory', authenticateToken, async (req, res) => {
   }
 })
 
-// Owner Dashboard
-app.get('/api/owner-dashboard', authenticateToken, async (req, res) => {
+// Collection Reports
+app.get('/api/collection-reports', authenticateToken, async (req, res) => {
   if (req.user.role !== 'owner') {
     return res.status(403).json({ error: 'Access denied' })
   }
   try {
-    const [stats] = await pool.query(
-      'SELECT ' +
-      '(SELECT SUM(amount) FROM payments WHERE YEAR(payment_date) = YEAR(CURDATE()) AND MONTH(payment_date) = MONTH(CURDATE())) AS revenue, ' +
-      '(SELECT COUNT(*) FROM users WHERE role = "member" AND membership_expiry >= CURDATE()) AS activeMembers, ' +
-      '(SELECT SUM(total_copies - available_copies) FROM books) AS booksInCirculation, ' +
-      '(SELECT SUM(fine) FROM borrowings WHERE fine > 0) AS outstandingFines'
+    const [rows] = await pool.query(
+      'SELECT subject AS genre, ' +
+      'COUNT(*) AS total, ' +
+      'SUM(available_copies) AS available, ' +
+      'SUM(total_copies - available_copies) AS borrowed ' +
+      'FROM books GROUP BY subject'
     )
-    res.json(stats[0] || { revenue: 0, activeMembers: 0, booksInCirculation: 0, outstandingFines: 0 })
+    res.json(rows)
   } catch (err) {
-    console.error('Owner dashboard error:', err)
-    res.status(500).json({ error: 'Failed to load dashboard data' })
+    console.error('Collection reports error:', err)
+    res.status(500).json({ error: 'Failed to load collection reports' })
+  }
+})
+
+// Book-Wise Copies
+app.get('/api/book-wise-copies', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'owner') {
+    return res.status(403).json({ error: 'Access denied' })
+  }
+  try {
+    const [rows] = await pool.query(
+      'SELECT book_id, title, total_copies, available_copies FROM books'
+    )
+    res.json(rows)
+  } catch (err) {
+    console.error('Book-wise copies error:', err)
+    res.status(500).json({ error: 'Failed to load book copies' })
+  }
+})
+
+// Available Copies
+app.get('/api/available-copies', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT book_id, title, author, total_copies, available_copies FROM books WHERE available_copies > 0'
+    )
+    res.json(rows)
+  } catch (err) {
+    console.error('Available copies error:', err)
+    res.status(500).json({ error: 'Failed to load available copies' })
+  }
+})
+
+// Borrowed Books
+app.get('/api/borrowed-books', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'member') {
+    return res.status(403).json({ error: 'Access denied' })
+  }
+  try {
+    const [rows] = await pool.query(
+      'SELECT b.id AS borrowing_id, b.book_id, bk.title, b.borrow_date, b.due_date ' +
+      'FROM borrowings b JOIN books bk ON b.book_id = bk.book_id ' +
+      'WHERE b.user_id = ? AND b.return_date IS NULL',
+      [req.user.id]
+    )
+    res.json(rows)
+  } catch (err) {
+    console.error('Borrowed books error:', err)
+    res.status(500).json({ error: 'Failed to load borrowed books' })
+  }
+})
+
+// Borrowing History
+app.get('/api/borrowing-history', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'member') {
+    return res.status(403).json({ error: 'Access denied' })
+  }
+  try {
+    const [rows] = await pool.query(
+      'SELECT b.book_id, bk.title, b.borrow_date, b.return_date, b.fine AS fine_amount ' +
+      'FROM borrowings b JOIN books bk ON b.book_id = bk.book_id ' +
+      'WHERE b.user_id = ?',
+      [req.user.id]
+    )
+    res.json(rows)
+  } catch (err) {
+    console.error('Borrowing history error:', err)
+    res.status(500).json({ error: 'Failed to load borrowing history' })
+  }
+})
+
+// Outstanding Fines
+app.get('/api/outstanding-fines', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'member') {
+    return res.status(403).json({ error: 'Access denied' })
+  }
+  try {
+    const [rows] = await pool.query(
+      'SELECT b.id, b.book_id, bk.title, b.due_date, b.fine AS amount ' +
+      'FROM borrowings b JOIN books bk ON b.book_id = bk.book_id ' +
+      'WHERE b.user_id = ? AND b.fine > 0',
+      [req.user.id]
+    )
+    res.json(rows)
+  } catch (err) {
+    console.error('Outstanding fines error:', err)
+    res.status(500).json({ error: 'Failed to load fines' })
   }
 })
 
@@ -511,18 +522,4 @@ app.listen(5000, () => {
   pool.query('SELECT 1')
     .then(() => console.log('Connected to MySQL database'))
     .catch(err => console.error('Database connection error:', err))
-})
-
-// Payment History
-app.get('/api/payment-history', authenticateToken, async (req, res) => {
-  try {
-    const [payments] = await pool.query(
-      'SELECT payment_id, payment_date, amount, description FROM payments WHERE user_id = ?',
-      [req.user.id]
-    )
-    res.json(payments)
-  } catch (err) {
-    console.error('Payment history error:', err)
-    res.status(500).json({ error: 'Failed to load payment history' })
-  }
 })

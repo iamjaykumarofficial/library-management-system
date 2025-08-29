@@ -84,10 +84,11 @@ function MemberDashboard() {
         <div className="d-flex gap-3">
           <Link to="/book-search" className="btn btn-outline-dark">Search Books</Link>
           <Link to="/borrowed-books" className="btn btn-outline-dark">View Borrowed Books</Link>
-          <Link to="/profile" className="btn btn-outline-dark">Manage Profile</Link>
-          <Link to="/payment-history" className="btn btn-outline-dark">Payment History</Link>
-          <Link to="/outstanding-fines" className="btn btn-outline-dark">Outstanding Fines</Link>
           <Link to="/borrowing-history" className="btn btn-outline-dark">Borrowing History</Link>
+          <Link to="/outstanding-fines" className="btn btn-outline-dark">Outstanding Fines</Link>
+          <Link to="/payment-history" className="btn btn-outline-dark">Payment History</Link>
+          <Link to="/profile" className="btn btn-outline-dark">Manage Profile</Link>
+          <Link to="/change-password" className="btn btn-outline-dark">Change Password</Link>
         </div>
       </div>
     </div>
