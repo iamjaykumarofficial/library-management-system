@@ -26,7 +26,6 @@ const authenticateToken = (req, res, next) => {
     next()
   })
 }
-
 // Register
 app.post('/api/register', async (req, res) => {
   const { fullName, email, phone, password, confirmPassword, role } = req.body
