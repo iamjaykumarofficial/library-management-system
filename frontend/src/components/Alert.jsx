@@ -1,20 +1,33 @@
-function Alert({ type, message }) {
+import { useState } from 'react'
+
+function Alert({ type, message, onClose }) {
+  const [visible, setVisible] = useState(true)
+
+  if (!visible) return null
+
+  const handleClose = () => {
+    setVisible(false)
+    if (onClose) onClose()
+  }
+
+  const alertClasses = {
+    success: 'alert alert-success alert-dismissible fade show',
+    danger: 'alert alert-danger alert-dismissible fade show',
+    warning: 'alert alert-warning alert-dismissible fade show',
+    info: 'alert alert-info alert-dismissible fade show'
+  }
+
   return (
-    <div className={`alert alert-${type} fade-in theme-alert`} role="alert">
-      <i className={`fas fa-${getIcon(type)} me-2`}></i>
-      {message}
+    <div className={alertClasses[type] || alertClasses.info} role="alert">
+      <strong>{type === 'success' ? 'Success!' : type === 'danger' ? 'Error!' : 'Notice!'}</strong> {message}
+      <button 
+        type="button" 
+        className="btn-close" 
+        onClick={handleClose}
+        aria-label="Close"
+      ></button>
     </div>
   )
-}
-
-function getIcon(type) {
-  switch (type) {
-    case 'success': return 'check-circle'
-    case 'danger': return 'exclamation-triangle'
-    case 'warning': return 'exclamation-circle'
-    case 'info': return 'info-circle'
-    default: return 'info-circle'
-  }
 }
 
 export default Alert

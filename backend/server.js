@@ -47,6 +47,27 @@ const createTransporter = () => {
   })
 }
 
+// Health check endpoint
+app.get('/api/health', async (req, res) => {
+  try {
+    await pool.getConnection()
+    res.json({ status: 'OK', message: 'Server and database are running' })
+  } catch (err) {
+    res.status(500).json({ status: 'ERROR', message: 'Database connection failed' })
+  }
+})
+
+// Database fix endpoint
+app.post('/api/fix-database', async (req, res) => {
+  try {
+    await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS address VARCHAR(255) DEFAULT ""')
+    res.json({ message: 'Database fixed successfully' })
+  } catch (err) {
+    console.error('Database fix error:', err)
+    res.status(500).json({ error: 'Failed to fix database' })
+  }
+})
+
 // Register
 app.post('/api/register', async (req, res) => {
   const { fullName, email, phone, password, confirmPassword, role } = req.body
@@ -97,24 +118,136 @@ app.post('/api/login', async (req, res) => {
   }
 })
 
-// Profile
+// Get Profile - IMPROVED VERSION
 app.get('/api/profile', authenticateToken, async (req, res) => {
   try {
+    console.log('Fetching profile for user:', req.user.id)
+    
     const [users] = await pool.query(
-      `SELECT id, full_name, email, phone, address, role, membership_expiry 
+      `SELECT id, full_name, email, phone, COALESCE(address, '') as address, role, membership_expiry 
        FROM users WHERE id = ?`,
       [req.user.id]
     )
+    
     if (users.length === 0) {
       return res.status(404).json({ error: 'User not found' })
     }
-    console.log(`Profile for user ${req.user.id}:`, users[0])
-    res.json(users[0])
+    
+    const user = users[0]
+    console.log('Profile data:', user)
+    
+    res.json({
+      full_name: user.full_name,
+      email: user.email,
+      phone: user.phone || '',
+      address: user.address || '',
+      role: user.role
+    })
   } catch (err) {
-    console.error('Profile error:', err)
+    console.error('Profile fetch error:', err)
+    
+    // Check if it's a missing column error
+    if (err.code === 'ER_BAD_FIELD_ERROR') {
+      return res.status(500).json({ 
+        error: 'Database configuration error. Please contact administrator.' 
+      })
+    }
+    
     res.status(500).json({ error: 'Failed to load profile' })
   }
 })
+
+// Update Profile - FIXED VERSION
+app.put('/api/profile', authenticateToken, async (req, res) => {
+  try {
+    // Accept both field naming conventions from frontend
+    const full_name = req.body.full_name || req.body.fullName
+    const email = req.body.email
+    const phone = req.body.phone
+    const address = req.body.address
+    
+    console.log('Updating profile for user:', req.user.id)
+    console.log('Update data:', { full_name, email, phone, address })
+
+    // Validate required fields
+    if (!full_name || !email) {
+      return res.status(400).json({ error: 'Full name and email are required' })
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Please enter a valid email address' })
+    }
+
+    // Check if email is already taken by another user
+    const [existingUsers] = await pool.query(
+      'SELECT id FROM users WHERE email = ? AND id != ?',
+      [email, req.user.id]
+    )
+    
+    if (existingUsers.length > 0) {
+      return res.status(400).json({ error: 'Email already exists' })
+    }
+
+    // Update user profile with error handling for missing columns
+    try {
+      await pool.query(
+        'UPDATE users SET full_name = ?, email = ?, phone = ?, address = ? WHERE id = ?',
+        [full_name, email, phone || '', address || '', req.user.id]
+      )
+    } catch (dbError) {
+      console.error('Database update error:', dbError)
+      
+      // If address column doesn't exist, update without address
+      if (dbError.code === 'ER_BAD_FIELD_ERROR') {
+        await pool.query(
+          'UPDATE users SET full_name = ?, email = ?, phone = ? WHERE id = ?',
+          [full_name, email, phone || '', req.user.id]
+        )
+        console.log('Updated profile without address column')
+      } else {
+        throw dbError
+      }
+    }
+
+    // Get updated user data
+    const [updatedUsers] = await pool.query(
+      `SELECT id, full_name, email, phone, COALESCE(address, '') as address, role 
+       FROM users WHERE id = ?`,
+      [req.user.id]
+    )
+
+    if (updatedUsers.length === 0) {
+      return res.status(404).json({ error: 'User not found after update' })
+    }
+
+    const updatedUser = updatedUsers[0]
+    
+    console.log('Profile updated successfully:', updatedUser)
+    
+    res.json({
+      message: 'Profile updated successfully',
+      full_name: updatedUser.full_name,
+      email: updatedUser.email,
+      phone: updatedUser.phone || '',
+      address: updatedUser.address || '',
+      role: updatedUser.role
+    })
+
+  } catch (err) {
+    console.error('Profile update error:', err)
+    
+    if (err.code === 'ER_BAD_FIELD_ERROR') {
+      res.status(500).json({ 
+        error: 'Database configuration issue. Please contact administrator.' 
+      })
+    } else {
+      res.status(500).json({ error: 'Failed to update profile. Please try again.' })
+    }
+  }
+})
+
 // Change Password
 app.put('/api/change-password', authenticateToken, async (req, res) => {
   const { currentPassword, newPassword, confirmPassword } = req.body
@@ -484,6 +617,7 @@ app.get('/api/borrowed-books', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Failed to load borrowed books' })
   }
 })
+
 // Borrowing History
 app.get('/api/borrowing-history', authenticateToken, async (req, res) => {
   if (req.user.role !== 'member') {
@@ -643,9 +777,31 @@ const PORT = process.env.PORT || 5000
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
+  
+  // Test database connection and table structure
   pool.getConnection()
-    .then(() => console.log('Connected to MySQL database'))
-    .catch(err => console.error('Database connection error:', err))
+    .then((connection) => {
+      console.log('Connected to MySQL database')
+      
+      // Check if address column exists
+      return connection.query(`
+        SELECT COLUMN_NAME 
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'users' AND COLUMN_NAME = 'address'
+      `, [process.env.DB_NAME])
+      .then(([rows]) => {
+        if (rows.length === 0) {
+          console.log('⚠️  Address column not found in users table. Some features may not work properly.')
+          console.log('💡 Visit http://localhost:5000/api/fix-database to automatically add the address column')
+        } else {
+          console.log('✅ Address column exists in users table')
+        }
+        connection.release()
+      })
+    })
+    .catch(err => {
+      console.error('Database connection error:', err)
+    })
 })
 
 export default app
