@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import Alert from '../components/Alert'
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -11,6 +12,7 @@ function Register() {
     role: 'member'
   })
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
   const handleChange = (e) => {
@@ -19,24 +21,24 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setError('')
+    
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match')
       return
     }
+
+    setLoading(true)
+
     try {
-      const response = await fetch('http://localhost:5000/api/register', {
+      const response = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fullName: formData.fullName,
-          email: formData.email,
-          phone: formData.phone,
-          password: formData.password,
-          confirmPassword: formData.confirmPassword,
-          role: formData.role
-        })
+        body: JSON.stringify(formData)
       })
+      
       const data = await response.json()
+      
       if (response.ok) {
         navigate('/login')
       } else {
@@ -44,7 +46,9 @@ function Register() {
       }
     // eslint-disable-next-line no-unused-vars
     } catch (err) {
-      setError('An error occurred')
+      setError('Network error. Please check if the server is running.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -56,7 +60,7 @@ function Register() {
             <div className="card-body">
               <h1 className="card-title text-center mb-4">Join Our Library</h1>
               <p className="text-center mb-4">Create your account</p>
-              {error && <div className="alert alert-danger">{error}</div>}
+              {error && <Alert type="danger" message={error} />}
               <form onSubmit={handleSubmit}>
                 <div className="mb-3">
                   <label htmlFor="fullName" className="form-label">Full Name</label>
@@ -69,6 +73,7 @@ function Register() {
                     value={formData.fullName}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="mb-3">
@@ -82,6 +87,7 @@ function Register() {
                     value={formData.email}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="mb-3">
@@ -95,6 +101,7 @@ function Register() {
                     value={formData.phone}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="mb-3">
@@ -106,6 +113,7 @@ function Register() {
                     value={formData.role}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   >
                     <option value="member">Member</option>
                     <option value="owner">Owner</option>
@@ -123,6 +131,7 @@ function Register() {
                       value={formData.password}
                       onChange={handleChange}
                       required
+                      disabled={loading}
                     />
                   </div>
                   <div className="col-md-6 mb-3">
@@ -136,11 +145,28 @@ function Register() {
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       required
+                      disabled={loading}
                     />
                   </div>
                 </div>
-                <p className="text-muted mb-3">By creating an account, you agree to our terms of service and privacy policy. Monthly membership fees apply for members as per library policy.</p>
-                <button type="submit" className="btn btn-dark w-100">Create Account</button>
+                <p className="text-muted mb-3">
+                  By creating an account, you agree to our terms of service and privacy policy. 
+                  Monthly membership fees apply for members as per library policy.
+                </p>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary w-100 py-2"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                      Creating Account...
+                    </>
+                  ) : (
+                    'Create Account'
+                  )}
+                </button>
               </form>
               <div className="text-center mt-3">
                 Already have an account? <Link to="/login">Sign In</Link>

@@ -6,6 +6,7 @@ import Alert from '../components/Alert'
 function PaymentHistory() {
   const [payments, setPayments] = useState([])
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -13,14 +14,17 @@ function PaymentHistory() {
       try {
         const token = localStorage.getItem('token')
         if (!token) {
-          setError('Please log in to view your payment history')
+          setError('Please log in to view payment history')
           setTimeout(() => navigate('/login'), 2000)
           return
         }
-        const response = await fetch('http://localhost:5000/api/payment-history', {
+
+        const response = await fetch('/api/payment-history', {
           headers: { 'Authorization': `Bearer ${token}` }
         })
+        
         const data = await response.json()
+        
         if (response.ok) {
           setPayments(data)
         } else {
@@ -28,7 +32,9 @@ function PaymentHistory() {
         }
       // eslint-disable-next-line no-unused-vars
       } catch (err) {
-        setError('An error occurred. Please try again.')
+        setError('Network error. Please check if the server is running.')
+      } finally {
+        setLoading(false)
       }
     }
     fetchPayments()
@@ -42,15 +48,41 @@ function PaymentHistory() {
     payment.description
   ])
 
+  if (loading) {
+    return (
+      <div className="container py-5">
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-3">Loading payment history...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="container py-5">
-      <h1 className="mb-4">Payment History</h1>
-      <p>View your payment history</p>
+    <div className="container py-5 fade-in">
+      <h1 className="fw-bold mb-4">Payment History</h1>
+      <p className="lead text-muted mb-4">View your payment history</p>
+      
       {error && <Alert type="danger" message={error} />}
-      {payments.length === 0 && !error && (
+      
+      {payments.length > 0 ? (
+        <div className="card shadow-sm">
+          <div className="card-header bg-white">
+            <h5 className="card-title mb-0">
+              <i className="fas fa-receipt me-2 text-success"></i>
+              Payment History ({payments.length} payments)
+            </h5>
+          </div>
+          <div className="card-body">
+            <Table headers={headers} rows={rows} />
+          </div>
+        </div>
+      ) : (
         <Alert type="info" message="No payment history available." />
       )}
-      {payments.length > 0 && <Table headers={headers} rows={rows} />}
     </div>
   )
 }

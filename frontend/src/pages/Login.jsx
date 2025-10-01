@@ -3,22 +3,36 @@ import { Link, useNavigate } from 'react-router-dom'
 import Alert from '../components/Alert'
 
 function Login() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  })
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setError('')
+    setLoading(true)
+
     try {
-      const response = await fetch('http://localhost:5000/api/login', {
+      const response = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify(formData)
       })
+      
       const data = await response.json()
+      
       if (response.ok) {
         localStorage.setItem('token', data.token)
+        localStorage.setItem('userRole', data.role)
+        
         if (data.role === 'owner') {
           navigate('/owner-dashboard')
         } else {
@@ -29,7 +43,9 @@ function Login() {
       }
     // eslint-disable-next-line no-unused-vars
     } catch (err) {
-      setError('An error occurred')
+      setError('Network error. Please check if the server is running.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -49,10 +65,12 @@ function Login() {
                     type="email"
                     className="form-control"
                     id="email"
+                    name="email"
                     placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={formData.email}
+                    onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="mb-3">
@@ -61,13 +79,28 @@ function Login() {
                     type="password"
                     className="form-control"
                     id="password"
+                    name="password"
                     placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={formData.password}
+                    onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
-                <button type="submit" className="btn btn-dark w-100">Sign In</button>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary w-100 py-2"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                      Signing In...
+                    </>
+                  ) : (
+                    'Sign In'
+                  )}
+                </button>
               </form>
               <div className="text-center mt-3">
                 <Link to="/forgot-password">Forgot your password?</Link>
