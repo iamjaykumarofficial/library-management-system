@@ -1,6 +1,6 @@
 function Alert({ type, message }) {
   return (
-    <div className={`alert alert-${type} fade-in`} role="alert">
+    <div className={`alert alert-${type} fade-in theme-alert`} role="alert">
       <i className={`fas fa-${getIcon(type)} me-2`}></i>
       {message}
     </div>

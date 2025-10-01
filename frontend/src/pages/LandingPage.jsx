@@ -43,66 +43,66 @@ function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-5 bg-light">
+      <section className="py-5 theme-bg-secondary">
         <div className="container">
           <div className="text-center mb-5">
-            <h2 className="fw-bold mb-3">System Features</h2>
-            <p className="lead text-muted">
+            <h2 className="fw-bold mb-3 theme-text">System Features</h2>
+            <p className="lead theme-text-secondary">
               Discover how our library management system can transform your reading experience
             </p>
           </div>
           
           <div className="row g-4">
             <div className="col-md-4">
-              <div className="feature-card">
+              <div className="feature-card theme-card">
                 <div className="feature-icon">
                   <i className="fas fa-users"></i>
                 </div>
-                <h4 className="fw-bold mb-3">For Members</h4>
-                <p className="text-muted">
+                <h4 className="fw-bold mb-3 theme-text">For Members</h4>
+                <p className="theme-text-secondary">
                   Search and discover books, check availability, manage borrowed items, 
                   and track your reading history with our intuitive member portal.
                 </p>
                 <ul className="list-unstyled mt-3">
-                  <li><i className="fas fa-check text-success me-2"></i> Easy book search</li>
-                  <li><i className="fas fa-check text-success me-2"></i> Borrowing management</li>
-                  <li><i className="fas fa-check text-success me-2"></i> Reading history</li>
+                  <li className="theme-text-secondary"><i className="fas fa-check text-success me-2"></i> Easy book search</li>
+                  <li className="theme-text-secondary"><i className="fas fa-check text-success me-2"></i> Borrowing management</li>
+                  <li className="theme-text-secondary"><i className="fas fa-check text-success me-2"></i> Reading history</li>
                 </ul>
               </div>
             </div>
             
             <div className="col-md-4">
-              <div className="feature-card">
+              <div className="feature-card theme-card">
                 <div className="feature-icon">
                   <i className="fas fa-user-tie"></i>
                 </div>
-                <h4 className="fw-bold mb-3">For Librarians</h4>
-                <p className="text-muted">
+                <h4 className="fw-bold mb-3 theme-text">For Librarians</h4>
+                <p className="theme-text-secondary">
                   Complete library operations including book management, member services, 
                   payment collection, and circulation control.
                 </p>
                 <ul className="list-unstyled mt-3">
-                  <li><i className="fas fa-check text-success me-2"></i> Inventory management</li>
-                  <li><i className="fas fa-check text-success me-2"></i> Member services</li>
-                  <li><i className="fas fa-check text-success me-2"></i> Circulation control</li>
+                  <li className="theme-text-secondary"><i className="fas fa-check text-success me-2"></i> Inventory management</li>
+                  <li className="theme-text-secondary"><i className="fas fa-check text-success me-2"></i> Member services</li>
+                  <li className="theme-text-secondary"><i className="fas fa-check text-success me-2"></i> Circulation control</li>
                 </ul>
               </div>
             </div>
             
             <div className="col-md-4">
-              <div className="feature-card">
+              <div className="feature-card theme-card">
                 <div className="feature-icon">
                   <i className="fas fa-chart-line"></i>
                 </div>
-                <h4 className="fw-bold mb-3">For Owners</h4>
-                <p className="text-muted">
+                <h4 className="fw-bold mb-3 theme-text">For Owners</h4>
+                <p className="theme-text-secondary">
                   Business oversight with financial reports, asset tracking, and 
                   comprehensive analytics for informed decision making.
                 </p>
                 <ul className="list-unstyled mt-3">
-                  <li><i className="fas fa-check text-success me-2"></i> Financial reports</li>
-                  <li><i className="fas fa-check text-success me-2"></i> Asset tracking</li>
-                  <li><i className="fas fa-check text-success me-2"></i> Analytics dashboard</li>
+                  <li className="theme-text-secondary"><i className="fas fa-check text-success me-2"></i> Financial reports</li>
+                  <li className="theme-text-secondary"><i className="fas fa-check text-success me-2"></i> Asset tracking</li>
+                  <li className="theme-text-secondary"><i className="fas fa-check text-success me-2"></i> Analytics dashboard</li>
                 </ul>
               </div>
             </div>
@@ -111,31 +111,31 @@ function LandingPage() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-5 bg-white">
+      <section className="py-5 theme-bg">
         <div className="container">
           <div className="row text-center">
             <div className="col-md-3">
               <div className="stat-item">
                 <h2 className="fw-bold text-primary">10,000+</h2>
-                <p className="text-muted">Books Available</p>
+                <p className="theme-text-secondary">Books Available</p>
               </div>
             </div>
             <div className="col-md-3">
               <div className="stat-item">
                 <h2 className="fw-bold text-primary">5,000+</h2>
-                <p className="text-muted">Active Members</p>
+                <p className="theme-text-secondary">Active Members</p>
               </div>
             </div>
             <div className="col-md-3">
               <div className="stat-item">
                 <h2 className="fw-bold text-primary">50+</h2>
-                <p className="text-muted">Categories</p>
+                <p className="theme-text-secondary">Categories</p>
               </div>
             </div>
             <div className="col-md-3">
               <div className="stat-item">
                 <h2 className="fw-bold text-primary">24/7</h2>
-                <p className="text-muted">Digital Access</p>
+                <p className="theme-text-secondary">Digital Access</p>
               </div>
             </div>
           </div>

@@ -1,0 +1,18 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#667eea"/>
+      <stop offset="100%" stop-color="#764ba2"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="32" height="32" rx="8" fill="url(#bgGradient)"/>
+  
+  <!-- Book Icon -->
+  <path d="M9 10 L9 22 C9 23 10 24 11 24 L21 24 C22 24 23 23 23 22 L23 10 C23 9 22 8 21 8 L11 8 C10 8 9 9 9 10 Z" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+  <path d="M11 10 L11 22" stroke="#ffffff" stroke-width="1.5"/>
+  <line x1="13" y1="12" x2="19" y2="12" stroke="#ffffff" stroke-width="1"/>
+  <line x1="13" y1="15" x2="19" y2="15" stroke="#ffffff" stroke-width="1"/>
+  <line x1="13" y1="18" x2="19" y2="18" stroke="#ffffff" stroke-width="1"/>
+</svg>

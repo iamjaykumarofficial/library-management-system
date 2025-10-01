@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import { ThemeProvider } from './context/ThemeContext'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -25,8 +26,8 @@ import CollectionReports from './pages/CollectionReports'
 import UserStatistics from './pages/UserStatistics'
 import SubjectWiseInventory from './pages/SubjectWiseInventory'
 import BookWiseCopies from './pages/BookWiseCopies'
-import Payment from './pages/payment'
 import './App.css'
+import Payment from './pages/payment'
 
 function App() {
   const [loading, setLoading] = useState(true)
@@ -50,41 +51,43 @@ function App() {
   }
 
   return (
-    <Router>
-      <div className="app-container">
-        <Header />
-        <ErrorBoundary>
-          <main className="main-content">
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/member-dashboard" element={<MemberDashboard />} />
-              <Route path="/owner-dashboard" element={<OwnerDashboard />} />
-              <Route path="/book-search" element={<BookSearch />} />
-              <Route path="/book-details/:id" element={<BookDetails />} />
-              <Route path="/available-copies" element={<AvailableCopies />} />
-              <Route path="/borrowed-books" element={<BorrowedBooks />} />
-              <Route path="/borrowing-history" element={<BorrowingHistory />} />
-              <Route path="/outstanding-fines" element={<OutstandingFines />} />
-              <Route path="/payment-history" element={<PaymentHistory />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/change-password" element={<ChangePassword />} />
-              <Route path="/add-book" element={<AddBook />} />
-              <Route path="/financial-reports" element={<FinancialReports />} />
-              <Route path="/asset-reports" element={<AssetReports />} />
-              <Route path="/collection-reports" element={<CollectionReports />} />
-              <Route path="/user-statistics" element={<UserStatistics />} />
-              <Route path="/subject-wise-inventory" element={<SubjectWiseInventory />} />
-              <Route path="/book-wise-copies" element={<BookWiseCopies />} />
-              <Route path="/payment" element={<Payment/>}/>
-            </Routes>
-          </main>
-        </ErrorBoundary>
-        <Footer />
-      </div>
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <div className="app-container">
+          <Header />
+          <ErrorBoundary>
+            <main className="main-content">
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/member-dashboard" element={<MemberDashboard />} />
+                <Route path="/owner-dashboard" element={<OwnerDashboard />} />
+                <Route path="/book-search" element={<BookSearch />} />
+                <Route path="/book-details/:id" element={<BookDetails />} />
+                <Route path="/available-copies" element={<AvailableCopies />} />
+                <Route path="/borrowed-books" element={<BorrowedBooks />} />
+                <Route path="/borrowing-history" element={<BorrowingHistory />} />
+                <Route path="/outstanding-fines" element={<OutstandingFines />} />
+                <Route path="/payment-history" element={<PaymentHistory />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/change-password" element={<ChangePassword />} />
+                <Route path="/add-book" element={<AddBook />} />
+                <Route path="/financial-reports" element={<FinancialReports />} />
+                <Route path="/asset-reports" element={<AssetReports />} />
+                <Route path="/collection-reports" element={<CollectionReports />} />
+                <Route path="/user-statistics" element={<UserStatistics />} />
+                <Route path="/subject-wise-inventory" element={<SubjectWiseInventory />} />
+                <Route path="/book-wise-copies" element={<BookWiseCopies />} />
+                <Route path="/payment" element={<Payment/>}/>
+              </Routes>
+            </main>
+          </ErrorBoundary>
+          <Footer />
+        </div>
+      </Router>
+    </ThemeProvider>
   )
 }
 

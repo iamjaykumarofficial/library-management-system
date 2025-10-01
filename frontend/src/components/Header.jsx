@@ -1,9 +1,11 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import { useTheme } from '../context/ThemeContext'
 
 function Header() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { isDark, toggleTheme } = useTheme()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userRole, setUserRole] = useState('')
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -37,21 +39,32 @@ function Header() {
   }
 
   return (
-    <header className="bg-white shadow-sm border-bottom">
+    <header className="bg-white shadow-sm border-bottom theme-header">
       <nav className="navbar navbar-expand-lg navbar-light py-3">
         <div className="container">
-          <Link to="/" className="navbar-brand fw-bold fs-3">
+          <Link to="/" className="navbar-brand fw-bold fs-3 theme-text">
             <i className="fas fa-book-reader me-2"></i>
             Library Management
           </Link>
           
-          <button 
-            className="navbar-toggler" 
-            type="button" 
-            onClick={toggleMenu}
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
+          <div className="d-flex align-items-center">
+            {/* Theme Toggle Button */}
+            <button 
+              className="btn btn-outline-secondary me-3 theme-toggle"
+              onClick={toggleTheme}
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              <i className={`fas ${isDark ? 'fa-sun' : 'fa-moon'}`}></i>
+            </button>
+            
+            <button 
+              className="navbar-toggler" 
+              type="button" 
+              onClick={toggleMenu}
+            >
+              <span className="navbar-toggler-icon"></span>
+            </button>
+          </div>
           
           <div className={`collapse navbar-collapse ${isMenuOpen ? 'show' : ''}`}>
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
@@ -97,11 +110,11 @@ function Header() {
                     <i className="fas fa-user-circle me-2"></i>
                     My Account
                   </button>
-                  <ul className="dropdown-menu" aria-labelledby="userMenu">
+                  <ul className="dropdown-menu theme-dropdown" aria-labelledby="userMenu">
                     <li>
                       <Link 
                         to={userRole === 'owner' ? '/owner-dashboard' : '/member-dashboard'} 
-                        className="dropdown-item"
+                        className="dropdown-item theme-text"
                         onClick={() => setIsMenuOpen(false)}
                       >
                         <i className="fas fa-tachometer-alt me-2"></i>
@@ -111,7 +124,7 @@ function Header() {
                     <li>
                       <Link 
                         to="/profile" 
-                        className="dropdown-item"
+                        className="dropdown-item theme-text"
                         onClick={() => setIsMenuOpen(false)}
                       >
                         <i className="fas fa-user me-2"></i>
